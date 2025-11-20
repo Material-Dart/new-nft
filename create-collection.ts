@@ -22,7 +22,7 @@ console.log("Set up Umi instance for user");
 
 const collectionMint = generateSigner(umi);
 
-const transaction = await createNft(umi, { mint: collectionMint, name: "Mr. Bülüç", symbol: "HB", uri: "https://...", sellerFeeBasisPoints: percentAmount(5), isCollection: true });
+const transaction = await createNft(umi, { mint: collectionMint, name: "Mr. Bülüç", symbol: "HB", uri: "https://raw.githubusercontent.com/Material-Dart/new-nft/refs/heads/main/metadata.json", sellerFeeBasisPoints: percentAmount(5), isCollection: true });
 await transaction.sendAndConfirm(umi);
 
 const createdCollectionNft = await fetchDigitalAsset(umi, collectionMint.publicKey);
