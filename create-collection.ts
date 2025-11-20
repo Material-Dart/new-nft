@@ -4,7 +4,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplTokenMetadata, createNft, fetchDigitalAsset } from "@metaplex-foundation/mpl-token-metadata";
 import { keypairIdentity, generateSigner, percentAmount } from "@metaplex-foundation/umi";
 
-const connection = new Connection(clusterApiUrl("devnet"));
+const connection = new Connection(clusterApiUrl("devnet"), "finalized");
 
 const user = await getKeypairFromFile();
 
@@ -22,9 +22,23 @@ console.log("Set up Umi instance for user");
 
 const collectionMint = generateSigner(umi);
 
-const transaction = await createNft(umi, { mint: collectionMint, name: "Mr. Bülüç", symbol: "HB", uri: "https://raw.githubusercontent.com/Material-Dart/new-nft/refs/heads/main/metadata.json", sellerFeeBasisPoints: percentAmount(5), isCollection: true });
-await transaction.sendAndConfirm(umi);
+console.log("Creating collection NFT...");
+console.log("Collection address:", collectionMint.publicKey);
 
-const createdCollectionNft = await fetchDigitalAsset(umi, collectionMint.publicKey);
+const transaction = await createNft(umi, { mint: collectionMint, name: "Mr. Bülüç", symbol: "HB", uri: "https://raw.githubusercontent.com/Material-Dart/new-nft/refs/heads/main/nft-collection-offchain-data.json", sellerFeeBasisPoints: percentAmount(5), isCollection: true });
+const result = await transaction.sendAndConfirm(umi, { confirm: { commitment: "finalized" } });
 
-console.log(`Created Collection 📦! Address is ${getExplorerLink("address", createdCollectionNft.mint.publicKey, "devnet")}`);
+console.log("Transaction confirmed:", result);
+
+try {
+    const createdCollectionNft = await fetchDigitalAsset(umi, collectionMint.publicKey);
+
+    console.log(`Created Collection 📦! Address is ${getExplorerLink("address", createdCollectionNft.mint.publicKey, "devnet")}`);
+    console.log(`Name: ${createdCollectionNft.metadata.name}`);
+    console.log(`Symbol: ${createdCollectionNft.metadata.symbol}`);
+    console.log(`URI: ${createdCollectionNft.metadata.uri}`);
+} catch (error) {
+    console.error("Error fetching digital asset:", error);
+    console.log(`Collection created but fetch failed. Address: ${collectionMint.publicKey}`);
+    console.log(`Explorer: ${getExplorerLink("address", collectionMint.publicKey, "devnet")}`);
+}
